@@ -1,8 +1,8 @@
 pipeline {
   agent {
     docker {
-      image 'abhishekf5/maven-abhishek-docker-agent:v1'
-      args '--user root -v /var/run/docker.sock:/var/run/docker.sock' // mount Docker socket to access the host's Docker daemon
+      image 'sriman325/maven-docker-agent:latest'
+      args '--user root -v /var/run/docker.sock:/var/run/docker.sock'
     }
   }
   stages {
@@ -10,6 +10,7 @@ pipeline {
       steps {
         sh 'echo passed'
         git branch: 'main', url: 'https://github.com/githubdevelopers123/Jenkins-Zero-To-Hero.git'
+        sh 'ls -R'
       }
     }
     stage('Build and Test') {
@@ -48,11 +49,16 @@ pipeline {
     stage('Update Deployment File') {
         environment {
             GIT_REPO_NAME = "Jenkins-Zero-To-Hero"
-            GIT_USER_NAME = "sriman325"
+            GIT_USER_NAME = "githubdevelopers123"
         }
         steps {
             withCredentials([string(credentialsId: 'github', variable: 'GITHUB_TOKEN')]) {
                 sh '''
+                    rm -rf ${GIT_REPO_NAME}
+                    git clone https://${GITHUB_TOKEN}@github.com/${GIT_USER_NAME}/${GIT_REPO_NAME}.git
+                    cd ${GIT_REPO_NAME}
+                    echo "Git user.name: $(git config user.name)"
+                    echo "Git user.email: $(git config user.email)"
                     git config user.email "sriman325@gmail.com"
                     git config user.name "sriman"
                     BUILD_NUMBER=${BUILD_NUMBER}
